@@ -1,8 +1,10 @@
-const { Client } = require('discord.js');
+const Discord = require('discord.js');
 const yt = require('ytdl-core');
 const tokens = require('./tokens.json');
-const client = new Client();
 
+const bot = new Discord.Client();
+const fs = require ('fs');
+bot.commands = new Discord.Collection();
 let queue = {};
 
 const commands = {
@@ -78,29 +80,49 @@ const commands = {
 		msg.channel.sendMessage(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 	},
 	'clear': (msg) => {
-		if (queue[msg.guild.id] === undefined) {
-			msg.channel.sendMessage(`There are no queue songs need to be cleared`);
+		if (queue[msg.guild.id] === undefined) {	//check if the queue is empty
+			msg.channel.sendMessage(`There are no queue songs need to be cleared`);	//give response
 		}
-		if (queue != undefined){
-			queue = {};
-			msg.channel.sendMessage(`Queue Cleared!`);
+		if (queue != undefined){	//check if the queue is not empty
+			queue = {};	//empty the queue
+			msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord
 		}
 		},
-	'help': (msg) => {
-		let tosend = ['```xl', tokens.prefix + 'join : "Join Voice channel of msg sender"',	tokens.prefix + 'add : "Add a valid youtube link to the queue"', tokens.prefix + 'queue : "Shows the current queue, up to 15 songs shown."', tokens.prefix + 'play : "Play the music queue if already joined to a voice channel"', '', 'the following commands only function while the play command is running:'.toUpperCase(), tokens.prefix + 'pause : "pauses the music"',	tokens.prefix + 'resume : "resumes the music"', tokens.prefix + 'skip : "skips the playing song"', tokens.prefix + 'time : "Shows the playtime of the song."',	'volume+(+++) : "increases volume by 2%/+"',	'volume-(---) : "decreases volume by 2%/-"',	'```'];
-		msg.channel.sendMessage(tosend.join('\n'));
-	},
+		'help': (msg) => {
+			let tosend = ['```xl', 
+			tokens.prefix + 'join : "Join Voice channel of msg sender"',	
+			tokens.prefix + 'add : "Add a valid youtube link to the queue"', 
+			tokens.prefix + 'queue : "Shows the current queue, up to 15 songs shown."', 
+			tokens.prefix + 'play : "Play the music queue if already joined to a voice channel"', '', 'the following commands only function while the play command is running:'.toUpperCase(), 
+			tokens.prefix + 'pause : "pauses the music"',	
+			tokens.prefix + 'resume : "resumes the music"', 
+			tokens.prefix + 'skip : "skips the playing song"', 
+			tokens.prefix + 'time : "Shows the playtime of the song."',	
+			'volume+(+++) : "increases volume by 2%/+"',	
+			'volume-(---) : "decreases volume by 2%/-"',	'```'];
+			msg.channel.sendMessage(tosend.join('\n'));
+		},
 	'reboot': (msg) => {
 		if (msg.author.id == tokens.adminID) process.exit(); //Requires a node module like Forever to work.
 	}
 };
 
-client.on('ready', () => {
-	console.log('ready!');
-});
+bot.on('ready', () => {
+	console.log('Ready!');
+   });
+bot.on('reconnecting', () => {
+	console.log('Reconnecting!');
+   });
+bot.on('disconnect', () => {
+	console.log('Disconnect!');
+   });
 
-client.on('message', msg => {
-	if (!msg.content.startsWith(tokens.prefix)) return;
-	if (commands.hasOwnProperty(msg.content.toLowerCase().slice(tokens.prefix.length).split(' ')[0])) commands[msg.content.toLowerCase().slice(tokens.prefix.length).split(' ')[0]](msg);
+bot.on('message', message => {
+	if (message.author.bot) return; //check if bot is the one sending the message
+	if (!message.content.startsWith(tokens.prefix)) return; //check if there is no prefix in the message	
+	if (commands.hasOwnProperty(message.content.toLowerCase().slice(tokens.prefix.length).split(' ')[0])) {
+		console.log(`${message.author.username}: ${message.content}`);	//let console to print what command is run
+		commands[message.content.slice(1).split(' ')[0]](message); //massage from user is read by command function
+	};		
 });
-client.login(tokens.d_token);
+bot.login(tokens.d_token);

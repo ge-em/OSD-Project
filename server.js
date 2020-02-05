@@ -12,8 +12,12 @@ const commands = {
 		if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg));
 		if (queue[msg.guild.id].playing) return msg.channel.sendMessage('Already Playing');
 		let dispatcher;
-		queue[msg.guild.id].playing = true;
-
+		if (queue.songs = []) {
+			queue[msg.guild.id].playing = false
+		} else if(queue.songs != []){
+			queue[msg.guild.id].playing = true
+		};
+		console.log(queue[msg.guild.id].playing);
 		console.log(queue);
 		(function play(song) {
 			console.log(song);
@@ -44,16 +48,20 @@ const commands = {
 				}
 			});
 			dispatcher.on('end', () => {
+				console.log(`${queue[msg.guild.id].songs}-end`)
 				collector.stop();
 				play(queue[msg.guild.id].songs.shift());
 			});
 			dispatcher.on('error', (err) => {
 				return msg.channel.sendMessage('error: ' + err).then(() => {
+					console.log(`${queue[msg.guild.id].songs}-err`)
 					collector.stop();
 					play(queue[msg.guild.id].songs.shift());
 				});
 			});
-		})(queue[msg.guild.id].songs.shift());
+		})		
+		(queue[msg.guild.id].songs.shift());
+		console.log(`${queue[msg.guild.id].songs}-..`);
 	},
 	'join': (msg) => {
 		return new Promise((resolve, reject) => {
@@ -79,8 +87,16 @@ const commands = {
 		msg.channel.sendMessage(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 	},
 	'clear': (msg) => {
-		if (queue[msg.guild.id] === undefined) {	//check if the queue is empty
-			msg.channel.sendMessage(`There are no queue songs need to be cleared`);	//give response
+		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Queue Cleared!`);
+		if (queue.songs != []){	//check if the queue is not empty
+		if (queue[msg.guild.id].playing === true) {//clear queue when playing
+			queue[msg.guild.id].songs = [];//empty the queue
+		} else if (queue[msg.guild.id].playing === false) { //clear queue while not playing
+			queue[msg.guild.id].songs = []; //empty the queue
+		}
+			console.log(queue);	
+			console.log(queue[msg.guild.id]);
+			return msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord
 		}
 		},
 	'loop': (msg) => {

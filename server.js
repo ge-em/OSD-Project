@@ -87,7 +87,11 @@ const commands = {
 			if(err) return msg.channel.sendMessage('Invalid YouTube Link: ' + err);
 			if (!queue.hasOwnProperty(msg.guild.id)) queue[msg.guild.id] = {}, queue[msg.guild.id].playing = false, queue[msg.guild.id].songs = [];
 			queue[msg.guild.id].songs.push({url: url, title: info.title, requester: msg.author.username});
-			msg.channel.sendMessage(`added **${info.title}** to the queue`);
+			if(msg.author.username === tokens.current_bot_name){
+				msg.channel.sendMessage(`===================`)
+			} else {
+				msg.channel.sendMessage(`added **${info.title}** to the queue`);
+			}
 		});
 	},
 	'queue': (msg) => {
@@ -110,6 +114,7 @@ const commands = {
 		}
 		},
 	'lastsong': (msg) => {
+		if (previousSong.list.length < 2) return msg.channel.sendMessage(`There are no previous song to be played`);
 		commands.join(msg);
 		commands.clear(msg);
 		function skipping() {
@@ -125,28 +130,13 @@ const commands = {
 		  }	  
 		setTimeout(playing, 2000);
 	},
-		/*
-	'loop': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Can not Loop withour queue`);
-		if (loop === false) { 
-			loop = true;//change loop permision to true
-			console.log(`loop queue => queue`)
-			loopQueue = queue
-			msg.channel.sendMessage('Looping queue');
-			if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg));
-		} else if (loop === true) {
-			loop = false;//change loop permision to false
-			console.log(`loop queue => queue`)
-			queue = loopQueue
-			msg.channel.sendMessage('Stop looping queue');
-			msg.member.voiceChannel.leave();
-		}
-	},*/
 	'help': (msg) => {
 		let tosend = ['```xl', 
 		tokens.prefix + 'join : "Join Voice channel of msg sender"',	
 		tokens.prefix + 'add : "Add a valid youtube link to the queue"', 
 		tokens.prefix + 'queue : "Shows the current queue, up to 15 songs shown."', 
+		tokens.prefix + 'clear : "Clear the songs queue"',
+		tokens.prefix + 'lastsong : "Play previous song, can only be done after playing atleast 2 song in advance"',
 		tokens.prefix + 'play : "Play the music queue if already joined to a voice channel"', '', 'the following commands only function while the play command is running:'.toUpperCase(), 
 		tokens.prefix + 'pause : "pauses the music"',	
 		tokens.prefix + 'resume : "resumes the music"', 
@@ -163,13 +153,6 @@ const commands = {
 
 bot.on('ready', () => {
 	console.log('Ready!');
-	console.log(bot.token.id);
-   });
-bot.on('reconnecting', () => {
-	console.log('Reconnecting!');
-   });
-bot.on('disconnect', () => {
-	console.log('Disconnect!');
    });
 
 bot.on('message', message => {

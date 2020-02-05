@@ -5,7 +5,10 @@ const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 let queue = {};
 let loop = false;
-let previousSong = {};
+let nowPlaying = {};
+var previousSong = {
+	"list": []
+};
 
 const commands = {
 	'play': (msg) => {
@@ -25,7 +28,10 @@ const commands = {
 			});
 			console.log(song);
 			msg.channel.sendMessage(`Playing: **${song.title}** as requested by: **${song.requester}**`);
-			previousSong = song;
+			nowPlaying = song;
+			previousSong.list.push(song);
+			console.log(`previous song:`)
+			console.log(previousSong)
 			dispatcher = msg.guild.voiceConnection.playStream(yt(song.url, { audioonly: true }), { passes : tokens.passes });
 			let collector = msg.channel.createCollector(m => m);
 			collector.on('message', m => {
@@ -34,6 +40,10 @@ const commands = {
 				} else if (m.content.startsWith(tokens.prefix + 'resume')){
 					msg.channel.sendMessage('resumed').then(() => {dispatcher.resume();});
 				} else if (m.content.startsWith(tokens.prefix + 'skip')){
+					if(m.author.username === tokens.current_bot_name){
+						dispatcher.end();
+					}
+					else
 					msg.channel.sendMessage('skipped').then(() => {dispatcher.end();});
 				} else if (m.content.startsWith('volume+')){
 					if (Math.round(dispatcher.volume*50) >= 100) return msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
@@ -102,18 +112,18 @@ const commands = {
 	'lastsong': (msg) => {
 		commands.join(msg);
 		commands.clear(msg);
-		function adding() {
-			msg.channel.sendMessage(`!add ${previousSong.url}`)
-		  }
-		setTimeout(adding, 1000);
 		function skipping() {
 			msg.channel.sendMessage(`!skip`)
 		  }	  
-		setTimeout(skipping, 1000);
+		setTimeout(skipping, 100);
+		function adding() {
+			msg.channel.sendMessage(`!add ${previousSong.list[1].url}`)
+		  }
+		setTimeout(adding, 300);
 		function playing() {
 			commands.play(msg);
 		  }	  
-		setTimeout(playing, 1000);
+		setTimeout(playing, 2000);
 	},
 		/*
 	'loop': (msg) => {

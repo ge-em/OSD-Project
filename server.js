@@ -5,6 +5,7 @@ const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 let queue = {};
 let loop = false;
+let previousSong = {};
 
 const commands = {
 	'play': (msg) => {
@@ -12,11 +13,8 @@ const commands = {
 		if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg));
 		if (queue[msg.guild.id].playing) return msg.channel.sendMessage('Already Playing');
 		let dispatcher;
-		if (queue.songs = []) {
-			queue[msg.guild.id].playing = false
-		} else if(queue.songs != []){
-			queue[msg.guild.id].playing = true
-		};
+		queue[msg.guild.id].playing = true
+
 		console.log(queue[msg.guild.id].playing);
 		console.log(queue);
 		(function play(song) {
@@ -25,7 +23,9 @@ const commands = {
 				queue[msg.guild.id].playing = false;
 				msg.member.voiceChannel.leave();
 			});
+			console.log(song);
 			msg.channel.sendMessage(`Playing: **${song.title}** as requested by: **${song.requester}**`);
+			previousSong = song;
 			dispatcher = msg.guild.voiceConnection.playStream(yt(song.url, { audioonly: true }), { passes : tokens.passes });
 			let collector = msg.channel.createCollector(m => m);
 			collector.on('message', m => {
@@ -59,7 +59,7 @@ const commands = {
 					play(queue[msg.guild.id].songs.shift());
 				});
 			});
-		})		
+		})
 		(queue[msg.guild.id].songs.shift());
 		console.log(`${queue[msg.guild.id].songs}-..`);
 	},
@@ -99,17 +99,39 @@ const commands = {
 			return msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord
 		}
 		},
+	'lastsong': (msg) => {
+		commands.join(msg);
+		commands.clear(msg);
+		function adding() {
+			msg.channel.sendMessage(`!add ${previousSong.url}`)
+		  }
+		setTimeout(adding, 1000);
+		function skipping() {
+			msg.channel.sendMessage(`!skip`)
+		  }	  
+		setTimeout(skipping, 1000);
+		function playing() {
+			commands.play(msg);
+		  }	  
+		setTimeout(playing, 1000);
+	},
+		/*
 	'loop': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with ${tokens.prefix}add`);
+		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Can not Loop withour queue`);
 		if (loop === false) { 
 			loop = true;//change loop permision to true
-			msg.channel.sendMessage('Loop is enabled');
+			console.log(`loop queue => queue`)
+			loopQueue = queue
+			msg.channel.sendMessage('Looping queue');
+			if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg));
 		} else if (loop === true) {
 			loop = false;//change loop permision to false
-			msg.channel.sendMessage('Loop is disabled');
-		};
-		if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg)); //go to command play and play the song
-	},
+			console.log(`loop queue => queue`)
+			queue = loopQueue
+			msg.channel.sendMessage('Stop looping queue');
+			msg.member.voiceChannel.leave();
+		}
+	},*/
 	'help': (msg) => {
 		let tosend = ['```xl', 
 		tokens.prefix + 'join : "Join Voice channel of msg sender"',	
@@ -131,6 +153,7 @@ const commands = {
 
 bot.on('ready', () => {
 	console.log('Ready!');
+	console.log(bot.token.id);
    });
 bot.on('reconnecting', () => {
 	console.log('Reconnecting!');
@@ -140,7 +163,6 @@ bot.on('disconnect', () => {
    });
 
 bot.on('message', message => {
-	if (message.author.bot) return; //check if bot is the one sending the message
 	if (!message.content.startsWith(tokens.prefix)) return; //check if there is no prefix in the message	
 	if (commands.hasOwnProperty(message.content.toLowerCase().slice(tokens.prefix.length).split(' ')[0])) {
 		console.log(`${message.author.username}: ${message.content}`);	//let console to print what command is run

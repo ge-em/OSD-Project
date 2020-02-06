@@ -11,49 +11,43 @@ var previousSong = {
 
 const commands = {
 	'play': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with ${tokens.prefix}add`);
+		if (queue[msg.guild.id] === undefined) return msg.channel.send(`Add some songs to the queue first with ${tokens.prefix}add`);
 		if (!msg.guild.voiceConnection) return commands.join(msg).then(() => commands.play(msg));
-		if (queue[msg.guild.id].playing) return msg.channel.sendMessage('Already Playing');
+		if (queue[msg.guild.id].playing) return msg.channel.send('Already Playing');
 		let dispatcher;
-		queue[msg.guild.id].playing = true
-
-		console.log(queue[msg.guild.id].playing);
-		console.log(queue);
+		queue[msg.guild.id].playing = true;
 		(function play(song) {
-			console.log(song);
-			if (song === undefined) return msg.channel.sendMessage('Queue is empty').then(() => {
+			if (song === undefined) return msg.channel.send('Queue is empty').then(() => {
 				queue[msg.guild.id].playing = false;
 				msg.member.voiceChannel.leave();
 			});
 			console.log(song);
-			msg.channel.sendMessage(`Playing: **${song.title}** as requested by: **${song.requester}**`);
+			msg.channel.send(`Playing: **${song.title}** as requested by: **${song.requester}**`);
 			nowPlaying = song;
 			previousSong.list.push(song);
-			console.log(`previous song:`)
-			console.log(previousSong)
 			dispatcher = msg.guild.voiceConnection.playStream(yt(song.url, { audioonly: true }), { passes : tokens.passes });
 			let collector = msg.channel.createCollector(m => m);
 			collector.on('message', m => {
 				if (m.content.startsWith(tokens.prefix + 'pause')) {
-					msg.channel.sendMessage('paused').then(() => {dispatcher.pause();});
+					msg.channel.send('paused').then(() => {dispatcher.pause();});
 				} else if (m.content.startsWith(tokens.prefix + 'resume')){
-					msg.channel.sendMessage('resumed').then(() => {dispatcher.resume();});
+					msg.channel.send('resumed').then(() => {dispatcher.resume();});
 				} else if (m.content.startsWith(tokens.prefix + 'skip')){
 					if(m.author.username === tokens.current_bot_name){
 						dispatcher.end();
 					}
 					else
-					msg.channel.sendMessage('skipped').then(() => {dispatcher.end();});
+					msg.channel.send('skipped').then(() => {dispatcher.end();});
 				} else if (m.content.startsWith('volume+')){
-					if (Math.round(dispatcher.volume*50) >= 100) return msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
+					if (Math.round(dispatcher.volume*50) >= 100) return msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 					dispatcher.setVolume(Math.min((dispatcher.volume*50 + (2*(m.content.split('+').length-1)))/50,2));
-					msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
+					msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 				} else if (m.content.startsWith('volume-')){
 					if (Math.round(dispatcher.volume*50) <= 0) return msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 					dispatcher.setVolume(Math.max((dispatcher.volume*50 - (2*(m.content.split('-').length-1)))/50,0));
-					msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
+					msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 				} else if (m.content.startsWith(tokens.prefix + 'time')){
-					msg.channel.sendMessage(`time: ${Math.floor(dispatcher.time / 60000)}:${Math.floor((dispatcher.time % 60000)/1000) <10 ? '0'+Math.floor((dispatcher.time % 60000)/1000) : Math.floor((dispatcher.time % 60000)/1000)}`);
+					msg.channel.send(`time: ${Math.floor(dispatcher.time / 60000)}:${Math.floor((dispatcher.time % 60000)/1000) <10 ? '0'+Math.floor((dispatcher.time % 60000)/1000) : Math.floor((dispatcher.time % 60000)/1000)}`);
 				}
 			});
 			dispatcher.on('end', () => {
@@ -62,7 +56,7 @@ const commands = {
 				play(queue[msg.guild.id].songs.shift());
 			});
 			dispatcher.on('error', (err) => {
-				return msg.channel.sendMessage('error: ' + err).then(() => {
+				return msg.channel.send('error: ' + err).then(() => {
 					console.log(`${queue[msg.guild.id].songs}-err`)
 					collector.stop();
 					play(queue[msg.guild.id].songs.shift());
@@ -81,44 +75,43 @@ const commands = {
 	},
 	'add': (msg) => {
 		let url = msg.content.split(' ')[1];
-		if (url == '' || url === undefined) return msg.channel.sendMessage(`You must add a YouTube video url, or id after ${tokens.prefix}add`);
+		if (url == '' || url === undefined) return msg.channel.send(`You must add a YouTube video url, or id after ${tokens.prefix}add`);
 		yt.getInfo(url, (err, info) => {
-			if(err) return msg.channel.sendMessage('Invalid YouTube Link: ' + err);
+			if(err) return msg.channel.send('Invalid YouTube Link: ' + err);
 			if (!queue.hasOwnProperty(msg.guild.id)) queue[msg.guild.id] = {}, queue[msg.guild.id].playing = false, queue[msg.guild.id].songs = [];
 			queue[msg.guild.id].songs.push({url: url, title: info.title, requester: msg.author.username});
 			console.log(queue[msg.guild.id])
 			if(msg.author.username === tokens.current_bot_name){
-				msg.channel.sendMessage(`===================`)
+				msg.channel.send(`===================`)
 			} else {
-				msg.channel.sendMessage(`added **${info.title}** to the queue`);
+				msg.channel.send(`added **${info.title}** to the queue`);
 			}
 		});
 	},
 	'lyric': (msg) => {
-		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`); 
+		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.send(`Play a song first`); 
 		// ^restrict the user if there are no song playing
 		const solenolyrics= require("solenolyrics"); 
 		async function runLyric() {
 			var lyrics = await solenolyrics.requestLyricsFor(nowPlaying.title);  
 			//^use solelyric library and give song title as the argument
-			msg.channel.sendMessage(lyrics, {split: true}); //send lyric to discord
-			console.log(`lyric send`) //identify that lyric is send to discord by showing it on console
+			msg.channel.send(lyrics, {split: true}); //send lyric to discord
 		}
 		runLyric(); //start the function
 	},
 	'nowplaying': (msg) => {
-		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`);
+		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.send(`Play a song first`);
 		// ^restrict the user if there are no song playing
-		msg.channel.sendMessage(nowPlaying.title); //print what song is playing to discord
+		msg.channel.send(nowPlaying.title); //print what song is playing to discord
 	},
 	'queue': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with "${tokens.prefix}add"`);
+		if (queue[msg.guild.id] === undefined) return msg.channel.send(`Add some songs to the queue first with "${tokens.prefix}add"`);
 		let tosend = [];
 		queue[msg.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - Requested by: ${song.requester}`);});
-		msg.channel.sendMessage(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
+		msg.channel.send(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 	},
 	'clear': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Queue Cleared!`); //send message that queue is cleared
+		if (queue[msg.guild.id] === undefined) return msg.channel.send(`Queue Cleared!`); //send message that queue is cleared
 		console.log(`queue cleared`) //send identifier that code is running to console
 		if (queue.songs != []){	//check if the queue is not empty
 		if (queue[msg.guild.id].playing === true) {//clear queue when playing
@@ -129,20 +122,20 @@ const commands = {
 			console.log(queue);	
 			console.log(queue[msg.guild.id]);
 			console.log(`queue cleared`)
-			return msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord		
+			return msg.channel.send(`Queue Cleared!`);	//give response to discord		
 		}
 		},
 	'lastsong': (msg) => {
-		if (previousSong.list.length < 2) return msg.channel.sendMessage(`There are no song to be played`);
+		if (previousSong.list.length < 2) return msg.channel.send(`There are no song to be played`);
 		//^algorith that tell if there are no songs played before, send error message to user
 		commands.join(msg); //bot join voice channel
 		commands.clear(msg); //bot clear queue so it will not play the next song
 		function skipping() {
-			msg.channel.sendMessage(`!skip`) //skip the current song if it is playing
+			msg.channel.send(`!skip`) //skip the current song if it is playing
 		  }	  
 		setTimeout(skipping, 100); //wait the song skip
 		function adding() {
-			msg.channel.sendMessage(`!add ${previousSong.list[1].url}`) 
+			msg.channel.send(`!add ${previousSong.list[1].url}`) 
 			//^tell user that it add previous song to queue
 		  }
 		setTimeout(adding, 300); //after the bot response to skip song, add song
@@ -167,7 +160,7 @@ const commands = {
 		tokens.prefix + 'time : "Shows the playtime of the song."',	
 		'volume+(+++) : "increases volume by 2%/+"',	
 		'volume-(---) : "decreases volume by 2%/-"',	'```'];
-		msg.channel.sendMessage(tosend.join('\n'));
+		msg.channel.send(tosend.join('\n'));
 	},
 	'reboot': (msg) => {
 		if (msg.author.id == tokens.adminID) process.exit(); //Requires a node module like Forever to work.

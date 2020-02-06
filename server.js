@@ -4,7 +4,6 @@ const tokens = require('./tokens.json');
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 let queue = {};
-let loop = false;
 let nowPlaying = {};
 var previousSong = {
 	"list": []
@@ -96,22 +95,24 @@ const commands = {
 		});
 	},
 	'lyric': (msg) => {
+		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`);
 		const solenolyrics= require("solenolyrics"); 
 		async function run() {
 			var lyrics = await solenolyrics.requestLyricsFor(nowPlaying.title); 
-			console.log(lyrics);
+			msg.channel.sendMessage(lyrics, {split: true});
+			console.log(`lyric send`)
 		}
-		
 		run();
 	},
 	'queue': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with ${tokens.prefix}add`);
+		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with "${tokens.prefix}add"`);
 		let tosend = [];
 		queue[msg.guild.id].songs.forEach((song, i) => { tosend.push(`${i+1}. ${song.title} - Requested by: ${song.requester}`);});
 		msg.channel.sendMessage(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 	},
 	'clear': (msg) => {
 		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Queue Cleared!`);
+		console.log(`queue cleared`)
 		if (queue.songs != []){	//check if the queue is not empty
 		if (queue[msg.guild.id].playing === true) {//clear queue when playing
 			queue[msg.guild.id].songs = [];//empty the queue
@@ -120,11 +121,12 @@ const commands = {
 		}
 			console.log(queue);	
 			console.log(queue[msg.guild.id]);
-			return msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord
+			console.log(`queue cleared`)
+			return msg.channel.sendMessage(`Queue Cleared!`);	//give response to discord		
 		}
 		},
 	'lastsong': (msg) => {
-		if (previousSong.list.length < 2) return msg.channel.sendMessage(`There are no previous song to be played`);
+		if (previousSong.list.length < 2) return msg.channel.sendMessage(`There are no song to be played`);
 		commands.join(msg);
 		commands.clear(msg);
 		function skipping() {

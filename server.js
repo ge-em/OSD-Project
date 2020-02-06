@@ -95,18 +95,21 @@ const commands = {
 		});
 	},
 	'lyric': (msg) => {
-		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`);
+		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`); 
+		// ^restrict the user if there are no song playing
 		const solenolyrics= require("solenolyrics"); 
-		async function run() {
-			var lyrics = await solenolyrics.requestLyricsFor(nowPlaying.title); 
-			msg.channel.sendMessage(lyrics, {split: true});
-			console.log(`lyric send`)
+		async function runLyric() {
+			var lyrics = await solenolyrics.requestLyricsFor(nowPlaying.title);  
+			//^use solelyric library and give song title as the argument
+			msg.channel.sendMessage(lyrics, {split: true}); //send lyric to discord
+			console.log(`lyric send`) //identify that lyric is send to discord by showing it on console
 		}
-		run();
+		runLyric(); //start the function
 	},
 	'nowplaying': (msg) => {
 		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`);
-		msg.channel.sendMessage(nowPlaying.title);
+		// ^restrict the user if there are no song playing
+		msg.channel.sendMessage(nowPlaying.title); //print what song is playing to discord
 	},
 	'queue': (msg) => {
 		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with "${tokens.prefix}add"`);
@@ -115,8 +118,8 @@ const commands = {
 		msg.channel.sendMessage(`__**${msg.guild.name}'s Music Queue:**__ Currently **${tosend.length}** songs queued ${(tosend.length > 15 ? '*[Only next 15 shown]*' : '')}\n\`\`\`${tosend.slice(0,15).join('\n')}\`\`\``);
 	},
 	'clear': (msg) => {
-		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Queue Cleared!`);
-		console.log(`queue cleared`)
+		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Queue Cleared!`); //send message that queue is cleared
+		console.log(`queue cleared`) //send identifier that code is running to console
 		if (queue.songs != []){	//check if the queue is not empty
 		if (queue[msg.guild.id].playing === true) {//clear queue when playing
 			queue[msg.guild.id].songs = [];//empty the queue
@@ -131,20 +134,22 @@ const commands = {
 		},
 	'lastsong': (msg) => {
 		if (previousSong.list.length < 2) return msg.channel.sendMessage(`There are no song to be played`);
-		commands.join(msg);
-		commands.clear(msg);
+		//^algorith that tell if there are no songs played before, send error message to user
+		commands.join(msg); //bot join voice channel
+		commands.clear(msg); //bot clear queue so it will not play the next song
 		function skipping() {
-			msg.channel.sendMessage(`!skip`)
+			msg.channel.sendMessage(`!skip`) //skip the current song if it is playing
 		  }	  
-		setTimeout(skipping, 100);
+		setTimeout(skipping, 100); //wait the song skip
 		function adding() {
-			msg.channel.sendMessage(`!add ${previousSong.list[1].url}`)
+			msg.channel.sendMessage(`!add ${previousSong.list[1].url}`) 
+			//^tell user that it add previous song to queue
 		  }
-		setTimeout(adding, 300);
+		setTimeout(adding, 300); //after the bot response to skip song, add song
 		function playing() {
-			commands.play(msg);
+			commands.play(msg); //call play function
 		  }	  
-		setTimeout(playing, 2000);
+		setTimeout(playing, 2000);//give time for bot to load the song
 	},
 	'help': (msg) => {
 		let tosend = ['```xl', 
@@ -153,6 +158,8 @@ const commands = {
 		tokens.prefix + 'queue : "Shows the current queue, up to 15 songs shown."', 
 		tokens.prefix + 'clear : "Clear the songs queue"',
 		tokens.prefix + 'lastsong : "Play previous song, can only be done after playing atleast 2 song in advance"',
+		tokens.prefix + 'lyric : "Show the lyric of current song"',
+		tokens.prefix + 'nowplaying : "Show information of current song"',
 		tokens.prefix + 'play : "Play the music queue if already joined to a voice channel"', '', 'the following commands only function while the play command is running:'.toUpperCase(), 
 		tokens.prefix + 'pause : "pauses the music"',	
 		tokens.prefix + 'resume : "resumes the music"', 

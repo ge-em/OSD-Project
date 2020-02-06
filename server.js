@@ -104,6 +104,10 @@ const commands = {
 		}
 		run();
 	},
+	'nowplaying': (msg) => {
+		if (queue[msg.guild.id] === undefined || queue[msg.guild.id].playing == false) return msg.channel.sendMessage(`Play a song first`);
+		msg.channel.sendMessage(nowPlaying.title);
+	},
 	'queue': (msg) => {
 		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with "${tokens.prefix}add"`);
 		let tosend = [];

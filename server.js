@@ -8,7 +8,7 @@ let loop = false;
 let nowPlaying = {};
 var previousSong = {
 	"list": []
-};
+}; //making a list to save the previous song
 
 const commands = {
 	'play': (msg) => {
@@ -87,12 +87,22 @@ const commands = {
 			if(err) return msg.channel.sendMessage('Invalid YouTube Link: ' + err);
 			if (!queue.hasOwnProperty(msg.guild.id)) queue[msg.guild.id] = {}, queue[msg.guild.id].playing = false, queue[msg.guild.id].songs = [];
 			queue[msg.guild.id].songs.push({url: url, title: info.title, requester: msg.author.username});
+			console.log(queue[msg.guild.id])
 			if(msg.author.username === tokens.current_bot_name){
 				msg.channel.sendMessage(`===================`)
 			} else {
 				msg.channel.sendMessage(`added **${info.title}** to the queue`);
 			}
 		});
+	},
+	'lyric': (msg) => {
+		const solenolyrics= require("solenolyrics"); 
+		async function run() {
+			var lyrics = await solenolyrics.requestLyricsFor(nowPlaying.title); 
+			console.log(lyrics);
+		}
+		
+		run();
 	},
 	'queue': (msg) => {
 		if (queue[msg.guild.id] === undefined) return msg.channel.sendMessage(`Add some songs to the queue first with ${tokens.prefix}add`);

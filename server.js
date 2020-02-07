@@ -27,7 +27,7 @@ const commands = {
 			previousSong.list.push(song);
 			dispatcher = msg.guild.voiceConnection.playStream(yt(song.url, { audioonly: true }), { passes : tokens.passes });
 			let collector = msg.channel.createCollector(m => m);
-			collector.on('message', m => {
+			collector.on('collect', m => {
 				if (m.content.startsWith(tokens.prefix + 'pause')) {
 					msg.channel.send('paused').then(() => {dispatcher.pause();});
 				} else if (m.content.startsWith(tokens.prefix + 'resume')){
@@ -43,7 +43,7 @@ const commands = {
 					dispatcher.setVolume(Math.min((dispatcher.volume*50 + (2*(m.content.split('+').length-1)))/50,2));
 					msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 				} else if (m.content.startsWith('volume-')){
-					if (Math.round(dispatcher.volume*50) <= 0) return msg.channel.sendMessage(`Volume: ${Math.round(dispatcher.volume*50)}%`);
+					if (Math.round(dispatcher.volume*50) <= 0) return msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 					dispatcher.setVolume(Math.max((dispatcher.volume*50 - (2*(m.content.split('-').length-1)))/50,0));
 					msg.channel.send(`Volume: ${Math.round(dispatcher.volume*50)}%`);
 				} else if (m.content.startsWith(tokens.prefix + 'time')){

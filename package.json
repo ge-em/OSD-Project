@@ -8,9 +8,16 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "discord.js" : "11.0.0",
-    "ytdl-core" :  "github:fent/node-ytdl-core#master",
-    "node-opus" : "^0.2.1"
+    "cheerio": "^1.0.0-rc.3",
+    "discord.js": "^11.5.1",
+    "genius-api": "^0.4.1",
+    "genius-lyrics": "^1.0.9",
+    "node-fetch": "^2.6.0",
+    "node-opus": "^0.2.1",
+    "opusscript": "0.0.7",
+    "simple-get-lyrics": "0.0.4",
+    "solenolyrics": "^5.0.0",
+    "ytdl-core": "github:fent/node-ytdl-core#master"
   },
   "author": "BDISTIN",
   "license": "MIT"
